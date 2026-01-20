@@ -2,199 +2,160 @@
 
 ## 1. Research Questions
 
-RQ1: Welche Arten von Bugs treten in GPU-beschleunigten Quantum-Stacks 
-(z.B. cuQuantum, CUDA-Q, PennyLane Lightning GPU) auf?
+RQ1: What types of bugs occur in GPU-accelerated quantum stacks
+(e.g. cuQuantum, CUDA-Q, PennyLane Lightning GPU)?
 
-Motivation: Wir wollen ein klares Bug-Profil für GPU-basierte Quantum-Stacks
-erstellen und später mit existierenden Studien zu Qiskit, Cirq & Co. vergleichen.
-So sehen wir, ob GPU-Stacks andere oder ähnliche Bugmuster haben.
-
-
-RQ2: In welchen Schichten des Stacks (Backend-Library, Framework-Integration, 
-High-Level-API, Build/Deploy/Environment) treten diese Bugs auf?
-
-Motivation: Die verschiedenen Schichten des Stacks (Low-Level-Library,
-Framework-Integration, High-Level-API, Build/Deploy/Environment) haben sehr
-unterschiedliche Verantwortlichkeiten. Wir wollen verstehen, wo sich Probleme
-konzentrieren, um gezielt Verbesserungen und Tools ansetzen zu können.
+Motivation: We want to create a clear bug profile for GPU-based quantum stacks
+and later compare it with existing studies on Qiskit, Cirq, etc.
+This allows us to see whether GPU stacks exhibit different or similar bug patterns.
 
 
-RQ3: Welcher Anteil dieser Bugs ist prinzipiell zur Compile-Time vermeidbar 
-(z.B. durch stärkere Typen, Typstate oder statische Analysen)?
+RQ2: In which layers of the stack (backend library, framework integration,
+high-level API, build/deploy/environment) do these bugs occur?
 
-Motivation: Diese Frage verbindet die empirische Analyse direkt mit
-Compile-Time-Safety (z.B. Typen, Typstate, statische Analysen). Wir wollen
-abschätzen, welches Potenzial es überhaupt gibt, Bugs schon vor der Ausführung
-abzufangen.
-Zusätzlich werden wir alle Bugs in drei CTClass-Kategorien einteilen:
-A (direkt compile-time vermeidbar), B (nur mit fortgeschrittener statischer
-Analyse potenziell vermeidbar) und C (nicht compile-time vermeidbar).
+Motivation: The different layers of the stack (low-level library,
+framework integration, high-level API, build/deploy/environment) have very
+different responsibilities. We want to understand where problems
+concentrate in order to apply targeted improvements and tools.
 
 
-RQ4: Welcher Anteil der Bugs in GPU-beschleunigten Quantum-Stacks ist 
-Configuration-/Environment-bedingt im Vergleich zu Logik-/Programmanomaly-Bugs, 
-wie sie in bestehenden Studien zu Quantum-Frameworks dominieren?
+RQ3: What proportion of these bugs is, in principle, avoidable at compile time
+(e.g. through stronger types, typestate, or static analyses)?
 
-Motivation: Bisherige Studien zu Quantum-Frameworks fokussieren stark auf
-Logik- und Algorithmus-Bugs. GPU-beschleunigte Stacks sind jedoch stark von
-Konfiguration, Treibern und Umgebung abhängig. Wir wollen quantifizieren, wie
-groß der Anteil von Config-/Environment-Bugs im Vergleich zu „klassischen“
-Programmfehlern ist.
-Außerdem vergleichen wir den Anteil von Config-/Environment-Bugs explizit mit
-Ergebnissen aus existierenden Studien zu High-Level-Frameworks (z.B. Qiskit,
-Cirq), um zu prüfen, ob GPU-Stacks hier deutlich anfälliger sind.
+Motivation: This question directly links the empirical analysis with
+compile-time safety (e.g. types, typestate, static analyses). We want to
+estimate what potential there is to catch bugs before execution at all.
+In addition, we will categorize all bugs into three CTClass categories:
+A (directly compile-time avoidable), B (potentially avoidable only with advanced static
+analysis), and C (not compile-time avoidable).
+
 
 
 ## 2. Systems / Projects
 
-Wir betrachten in dieser Studie drei zentrale Systeme aus dem Bereich
-GPU-beschleunigter Quantum-Stacks:
+In this study, we consider three central systems from the area of
+GPU-accelerated quantum stacks:
 
 ### System 1 – cuQuantum / cuStateVec (NVIDIA)
 
-cuQuantum (insbesondere cuStateVec und cuTensorNet) ist eine Low-Level-GPU-
-Bibliothek für das Simulieren von Quantenzuständen und -schaltungen. Sie
-stellt vorrangig C- und Python-APIs bereit, die in verschiedene Frameworks
-integriert werden können.
+cuQuantum (in particular cuStateVec and cuTensorNet) is a low-level GPU
+library for simulating quantum states and circuits. It primarily provides
+C and Python APIs that can be integrated into various frameworks.
 
-Für unsere Studie ist cuQuantum relevant als Beispiel für eine
-Backend-Library, in der Bugs typischerweise GPU-nahe Funktionalität betreffen,
-z.B. Speicherverwaltung, CUDA-Kernel-Aufrufe, Performance- und
-Numerikprobleme oder spezielle Hardware-Konfigurationen.
+For our study, cuQuantum is relevant as an example of a
+backend library in which bugs typically affect GPU-close functionality,
+e.g. memory management, CUDA kernel calls, performance and
+numerics issues, or special hardware configurations.
 
 ### System 2 – CUDA-Q (cuda-quantum)
 
-CUDA-Q (ehemals cuda-quantum) ist ein Framework für Quantum Programming mit
-C++- und Python-Frontends und mehreren Backends (u.a. CPU-Simulatoren und
-GPU-basierte Backends wie cuStateVec). Es verbindet High-Level-Programmierung
-mit der Ausführung auf unterschiedlichen Targets.
+CUDA-Q (formerly cuda-quantum) is a framework for quantum programming with
+C++ and Python frontends and multiple backends (including CPU simulators and
+GPU-based backends such as cuStateVec). It combines high-level programming
+with execution on different targets.
 
-Für unsere Studie ist CUDA-Q ein Beispiel für ein Framework auf der
-Framework-Integrationsschicht. Relevante Bugs betreffen hier u.a. die
-Anbindung an Backends, API-Contracts, Typen und Parameter, Build- und
-Compile-Probleme sowie das Zusammenspiel von Host-Code und Quantum-Kernels.
-
-### System 3 – PennyLane Lightning GPU
-
-Lightning GPU ist ein PennyLane-Backend, das GPU-beschleunigte Simulation über
-cuQuantum/custatevec ermöglicht. Es wird typischerweise über PennyLane als
-„Device“ angesprochen und in Python-Workflows integriert.
-
-Für unsere Studie repräsentiert Lightning GPU die Kombination aus
-Framework-Integration und High-Level-API, bei der Bugs häufig mit
-Device-Konfiguration, Backend-Auswahl, Bibliotheksversionen, Gradienten-
-Berechnung oder der Einbettung in größere Machine-Learning-Workflows
-zusammenhängen.
+For our study, CUDA-Q is an example of a framework at the
+framework-integration layer. Relevant bugs here include, among others, the
+connection to backends, API contracts, types and parameters, build and
+compile problems, as well as the interaction between host code and quantum
+kernels.
 
 
 ## 3. Timeframe & Sample Size
 
-In dieser Studie betrachten wir Bugs aus einem klar begrenzten Zeitraum und
-verwenden eine feste Stichprobengröße, um die Analyse überschaubar und
-replizierbar zu halten.
+In this study, we consider bugs from a clearly delimited time period and
+use a fixed sample size to keep the analysis manageable and
+replicable.
 
 ### Timeframe
 
-Geplanter Betrachtungszeitraum:
+Planned observation period:
 
-- Bugs, die im Zeitraum **01.01.2023 – 19.11.2025** erstellt wurden.
-- Fokus auf moderne Versionen von cuQuantum, CUDA-Q und Lightning GPU, in
-  denen GPU-Unterstützung bereits etabliert ist.
-- Der genaue Stichtag (Datum des Datenpulls) wird im Methodik-Teil dokumentiert,
-  falls er leicht vom hier genannten Zeitraum abweicht.
+- Bugs that were created in the period **01.01.2023 – 19.11.2025**.
+- Focus on modern versions of cuQuantum, CUDA-Q, and Lightning GPU, in which
+  GPU support is already established.
+- The exact cutoff date (date of the data pull) will be documented in the methods section
+  in case it deviates slightly from the period stated here.
 
 ### Sample Size
 
-Ziel ist eine Stichprobe von insgesamt ca. **100–120 Bugs**, die als
-„GPU-relevant“ eingestuft werden (siehe Definitions-Abschnitt).
+The goal is a sample of a total of about **100–120 bugs** that are classified as
+“GPU-relevant” (see the definitions section).
 
-Grobe Zielverteilung über die drei Systeme:
+Rough target distribution across the three systems:
 
-- ca. 35–40 % Bugs aus cuQuantum / cuStateVec,
-- ca. 35–40 % Bugs aus CUDA-Q,
-- ca. 20–30 % Bugs aus PennyLane Lightning GPU.
+- about 60–70% of bugs from Cuda-Q
+- about 30% of bugs from Qskit
 
-Diese Verteilung kann bei der tatsächlichen Datensammlung leicht angepasst
-werden (z.B. wenn einzelne Repositories deutlich weniger passende Bugs im
-Zeitraum enthalten), die **Gesamtgröße** der Stichprobe (≈ 100–120 Bugs)
-soll jedoch beibehalten werden.
-
-Die Stichprobe wird später mittels eines klar definierten Sampling-Protokolls
-(z.B. stratifiziert nach Projekt und Zeitraum, mit dokumentiertem Zufallsseed)
-gezogen und anschließend „eingefroren“, bevor das systematische Coding beginnt.
+This distribution can be adjusted during actual data collection
+(e.g. if individual repositories contain significantly fewer suitable bugs in the
+period), but the **overall size** of the sample (≈ 100–120 bugs)
+should be maintained.
 
 
-## 4. Out-of-Scope
+## 4. Out of Scope
 
-In dieser Studie betrachten wir bewusst nur einen Ausschnitt des gesamten
-Ökosystems. Folgende Aspekte sind ausdrücklich **nicht** Teil des Scopes:
+In this study, we deliberately consider only a subset of the overall
+ecosystem. The following aspects are explicitly **not** part of the scope:
 
-1. Klassische CPU-only-Simulatoren
-   - Bugs, die ausschließlich reine CPU-Simulatoren oder Backends ohne
-     GPU-Bezug betreffen, werden nicht berücksichtigt.
-   - Beispiel: Bugs in rein CPU-basierten PennyLane- oder Qiskit-Backends
-     ohne Verwendung von cuQuantum oder vergleichbaren GPU-Libraries.
+1. Classic CPU-only simulators
+   - Bugs that exclusively concern pure CPU simulators or backends without
+     GPU relevance are not considered.
+   - Example: Bugs in purely CPU-based PennyLane or Qiskit backends
+     without using cuQuantum or comparable GPU libraries.
 
-2. Reine Feature Requests und Design-Diskussionen
-   - Issues, in denen keine Fehlfunktion, sondern nur neue Features, API-
-     Erweiterungen oder allgemeine Designvorschläge diskutiert werden,
-     zählen nicht als Bugs im Sinne dieser Studie.
+2. Pure feature requests and design discussions
+   - Issues in which no malfunction is discussed, but only new features, API
+     extensions, or general design proposals, do not count as bugs in the sense of this study.
 
-3. Dokumentations- und Schreibfehler
-   - Issues, die ausschließlich Dokumentationsfehler, Typos oder fehlende
-     Beispiele in der Doku betreffen, werden ausgeschlossen, sofern keine
-     tatsächliche Laufzeit-Fehlfunktion beschrieben wird.
+3. Documentation and writing errors
+   - Issues that exclusively concern documentation errors, typos, or missing
+     examples in the documentation are excluded, provided that no
+     actual runtime malfunction is described.
 
-4. Hardware-/Treiberprobleme ohne klaren Softwarebezug
-   - Fälle, in denen Probleme ausschließlich auf spezifische Hardwaredefekte
-     oder externe Treiber-/Systemkonfigurationen zurückgeführt werden und
-     kein sinnvoller Bezug zu den untersuchten Libraries/Frameworks
-     hergestellt werden kann, werden nicht in die Stichprobe aufgenommen.
+4. Hardware/driver problems without a clear software reference
+   - Cases in which problems are attributed exclusively to specific hardware defects
+     or external driver/system configurations and no meaningful reference to the libraries/frameworks
+     studied can be established are not included in the sample.
 
-5. Duplicate-Issues ohne eigenen inhaltlichen Mehrwert
-   - Reine Duplikate anderer Issues, die keine zusätzlichen technischen
-     Details enthalten, werden verworfen. Stattdessen wird das jeweils
-     informativere Original-Issue betrachtet.
 
 
 ## 5. Definitions
 
-In diesem Abschnitt definieren wir zentrale Begriffe, die für die Auswahl und
-spätere Klassifikation der Bugs wichtig sind.
+In this section, we define key terms that are important for selecting and
+later classifying the bugs.
 
 ### Definition: Bug
 
-Für diese Studie verstehen wir unter einem „Bug“ ein Issue oder einen Report,
-in dem mindestens einer der folgenden Punkte erfüllt ist:
+For this study, we understand a “bug” to be an issue or report
+in which at least one of the following points is met:
 
-- Es wird ein falsches Verhalten, ein Crash oder eine Fehlermeldung im
-  Zusammenhang mit einem der betrachteten Systeme beschrieben, oder
-- es wird ein konkreter Fix, Workaround oder Patch diskutiert, der eine
-  Fehlfunktion adressiert.
+- Incorrect behavior, a crash, or an error message is described in
+  connection with one of the systems considered, or
+- a concrete fix, workaround, or patch is discussed that addresses a
+  malfunction.
 
-Reine Verbesserungsvorschläge, Designideen oder Dokumentationswünsche zählen
-nicht als Bug (siehe Out-of-Scope).
+Pure improvement suggestions, design ideas, or documentation requests do
+not count as a bug (see out of scope).
 
-### Definition: GPU-relevanter Bug
+### Definition: GPU-relevant bug
 
-Ein Bug wird als „GPU-relevant“ eingestuft, wenn mindestens eine der folgenden
-Bedingungen erfüllt ist:
+A bug is classified as “GPU-relevant” if at least one of the following
+conditions is met:
 
-- Das Issue erwähnt explizit GPU-/CUDA-Begriffe (z.B. „GPU“, „CUDA“, „device“,
-  „kernel“, „stream“, „GPU backend“), oder
-- das Problem tritt nur bei Verwendung eines GPU-Backends oder eines
-  GPU-spezifischen Devices auf, oder
-- der Bug ist klar an die Konfiguration oder Verfügbarkeit von GPU-Ressourcen
-  (z.B. CUDA-Version, Treiber, GPU-Speicher) gekoppelt.
+- The issue explicitly mentions GPU/CUDA terms (e.g. “GPU”, “CUDA”, “device”,
+  “kernel”, “stream”, “GPU backend”), or
+- the problem occurs only when using a GPU backend or a
+  GPU-specific device, or
+- the bug is clearly tied to the configuration or availability of GPU resources
+  (e.g. CUDA version, driver, GPU memory).
 
-### Definition: Compile-Time-vermeidbarer Bug (CTClass A/B/C – Arbeitsversion)
+### Definition: compile-time avoidable bug (CTClass A/B/C – working version)
 
-Wir verwenden eine grobe Dreiteilung, um das Potenzial für Compile-Time-
-Vermeidbarkeit zu klassifizieren:
+We use a rough three-way split to classify the potential for compile-time
+avoidability:
 
-- **CTClass A – direkt compile-time vermeidbar**  
-  Bugs, die durch stärkere Typen, Typstate oder einfache statische Checks
-  mit hoher Wahrscheinlichkeit verhindert we
-
-
-## 6. Planned Workflow (High-Level)
+- **CTClass A – directly compile-time avoidable**  
+  Bugs that can, with high probability, be prevented by stronger types,
+  typestate, or simple static checks
+  with high probability could be prevented we
