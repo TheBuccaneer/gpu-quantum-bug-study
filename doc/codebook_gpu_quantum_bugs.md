@@ -2,34 +2,15 @@
 
 ## 1. Bug Types (What)
 
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| ID | Bug Type                             | Short Description                          | Typical CTClass Tendency  |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 1  | Config-/Environment Bug              | Incorrect / incompatible environment,      | Often C, sometimes B      |
-|    |                                      | drivers, CUDA versions, missing            | (e.g., if better          |
-|    |                                      | libraries, container-/cluster config.      | checks in the build help).|
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 2  | Build-/Install-/Packaging Bug        | Errors in build scripts, installer,        | Often B, occasionally A or|
-|    |                                      | package setup, dependency declarations     | C (depending on the nature|
-|    |                                      | (pip/uv/conda/wheels, linker issues).      | of the problem).          |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 3  | Backend-/Framework Integration Bug   | Problems in the interaction of framework   | Often B (A/B borderline), |
-|    |                                      | and backends (wrong target selection,      | partly C if strongly      |
-|    |                                      | initialization of GPU backends,            | dependent on runtime      |
-|    |                                      | incompatible interfaces).                  | hardware.                 |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 4  | API-/Usage-/Logic Bug (High-Level)   | Misuse of high-level APIs,                 | More A or B, since many   |
-|    |                                      | wrong preconditions, typical               | errors can be found via   |
-|    |                                      | logic/algorithm errors in user code.       | types/contracts.          |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 5  | Performance-/Numerics Bug            | Performance degradation, incorrect         | Mostly B or C: often      |
-|    |                                      | complexity, numerical instability,         | analysis/design or        |
-|    |                                      | precision/rounding problems.               | runtime questions.        |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
-| 6  | Other / Uncategorized                | Cases that do not fit well into the above  | Depends on the specific   |
-|    |                                      | categories; used                           | case; leave open          |
-|    |                                      | to further develop the codebook.           | initially.                |
-+----+--------------------------------------+-------------------------------------------+---------------------------+
+| ID | Bug Type                           | Short Description                                                                 | Typical CTClass Tendency                                         |
+|---:|------------------------------------|----------------------------------------------------------------------------------|------------------------------------------------------------------|
+| 1  | Config-/Environment Bug            | Incorrect/incompatible environment: drivers, CUDA versions, missing libraries, container/cluster config. | Often C; sometimes B (e.g., if better preflight/build checks help). |
+| 2  | Build-/Install-/Packaging Bug      | Errors in build scripts/installer/packaging: dependency declarations, wheels/sdists, linker issues (pip/uv/conda). | Often B; occasionally A or C (depends on the nature of the problem). |
+| 3  | Backend-/Framework Integration Bug | Interaction problems between framework and backends: wrong target selection, GPU-backend init, incompatible interfaces. | Often B (A/B borderline); partly C if strongly runtime/hardware-dependent. |
+| 4  | API-/Usage-/Logic Bug (High-Level) | Misuse of high-level APIs: wrong preconditions, typical logic/algorithm errors in user code. | More A or B, since many errors are catchable via types/contracts. |
+| 5  | Performance-/Numerics Bug          | Performance degradation, unexpected complexity, numerical instability, precision/rounding issues. | Mostly B or C: often analysis/design or runtime questions.       |
+| 6  | Other / Uncategorized              | Does not fit the above categories; used initially to keep the codebook extensible. | Depends on the specific case; keep open initially.               |
+
 
 
 
