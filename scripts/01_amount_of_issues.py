@@ -1,6 +1,5 @@
 import pandas as pd
 
-# IMPORTANT: paths must be strings (NOT pd.read_csv(...))
 CUDAQ_FILE = r"./Cuda-Q/cudaq_issues_raw.csv"
 QISKIT_FILE = r"./qskit/github_issues.csv"
 
@@ -9,7 +8,7 @@ def normalize_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df.columns = (
         df.columns.astype(str)
-        .str.replace("\ufeff", "", regex=False)  # BOM
+        .str.replace("\ufeff", "", regex=False)
         .str.strip()
         .str.lower()
         .str.replace(" ", "_", regex=False)
@@ -19,7 +18,7 @@ def normalize_cols(df: pd.DataFrame) -> pd.DataFrame:
 
 def drop_embedded_headers(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    # If a second header row was appended into the data
+
     if "issueid" in df.columns:
         df = df[df["issueid"].astype(str).str.strip().str.lower() != "issueid"]
     if "project" in df.columns:
@@ -51,7 +50,6 @@ def parse_gpu_relevant(df: pd.DataFrame) -> pd.DataFrame:
 
     v = df["gpu_relevant"].fillna("").astype(str).str.strip().str.lower()
 
-    # Accept lots of common encodings, incl. "x" marking
     true_set = {"true", "1", "yes", "y", "x", "gpu", "g"}
     false_set = {"false", "0", "no", "n", ""}
 
@@ -75,7 +73,6 @@ def summarize(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
         end=("createdat_parsed", "max"),
     ).reset_index()
 
-    # ensure numeric
     for c in ["n_issues", "n_closed", "n_open"]:
         out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0).astype(int)
 
@@ -96,10 +93,9 @@ def main():
 
     qiskit_gpu = qiskit[qiskit["gpu_relevant_bool"] == True].copy()
 
-    # Debug if filter kills everything
+
     if qiskit_gpu.empty and "gpu_relevant" in qiskit.columns:
-        print("WARNING: After filtering gpu_relevant_bool, Qiskit GPU set is empty.")
-        print("Unique raw gpu_relevant values (top 20):")
+        print("WARNING: Qiskit GPU set is empty.")
         print(qiskit["gpu_relevant"].fillna("").astype(str).str.strip().value_counts().head(20))
 
     N_cudaq = cudaq["issueid"].nunique()
@@ -114,7 +110,7 @@ def main():
     summary = pd.concat([s_cudaq, s_qiskit], ignore_index=True)
 
     cols = ["dataset","project","n_issues","start","end","n_closed","closed_pct","n_open","open_pct"]
-    print("\nPer Project/Repo summary (Table 1 draft):")
+    print("\nPer Project-Repo summary (Table 1 draft):")
     print(summary[cols].to_string(index=False))
 
     summary.to_csv("table1_dataset_overview.csv", index=False)

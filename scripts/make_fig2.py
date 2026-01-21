@@ -1,18 +1,10 @@
-# make_fig2.py
-"""
-Generate Figure 2: CTClass Distribution by Stack Layer
-Publication-ready output as PDF and PNG (300 dpi)
-"""
+
 
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
 
 # Colors (Hex)
 COLORS = {
@@ -30,11 +22,8 @@ OUTPUT_DIR = 'figures'
 OUTPUT_PDF = os.path.join(OUTPUT_DIR, 'fig2_layer_x_ctclass.pdf')
 OUTPUT_PNG = os.path.join(OUTPUT_DIR, 'fig2_layer_x_ctclass.png')
 
-# ============================================================================
-# LOAD DATA
-# ============================================================================
 
-print("Loading data...")
+print("Loading data")
 
 # Check if files exist
 required_files = [
@@ -50,9 +39,6 @@ for fname in required_files:
 df_pct = pd.read_csv('d_layer_x_ctclass_overall_pct.csv')
 df_counts = pd.read_csv('d_layer_x_ctclass_overall_counts.csv')
 
-# ============================================================================
-# QUALITY CHECKS
-# ============================================================================
 
 print("Running quality checks...")
 
@@ -61,11 +47,11 @@ for idx, row in df_pct.iterrows():
     total_pct = row['A'] + row['B'] + row['C']
     assert 99.8 <= total_pct <= 100.2, \
         f"Layer {row['stacklayer']}: percentages sum to {total_pct}%"
-print(f"✓ All layer percentages sum to ~100%")
+print(f"All layer percentages sum to ~100%")
 
 # Check 2: Total count consistency
 total_count = df_counts[['A', 'B', 'C']].sum().sum()
-print(f"✓ Total count across all layers: {total_count}")
+print(f"Total count across all layers: {total_count}")
 
 # ============================================================================
 # PREPARE DATA
@@ -86,7 +72,7 @@ y_labels = [f"{row['stacklayer']} (N={int(row['N'])})"
 # CREATE FIGURE
 # ============================================================================
 
-print("Creating figure...")
+print("Creating figure")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -182,16 +168,16 @@ ax.legend(handles=legend_elements,
 # SAVE FIGURE
 # ============================================================================
 
-print("Saving figure...")
+print("Saving figure")
 
 # Save as PDF
 plt.savefig(OUTPUT_PDF, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PDF}")
+print(f"Saved: {OUTPUT_PDF}")
 
 # Save as PNG
 plt.savefig(OUTPUT_PNG, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PNG}")
+print(f"Saved: {OUTPUT_PNG}")
 
 plt.close()
 
-print("\n✓ Figure 2 complete!")
+print("\nFigure 2 complete!")

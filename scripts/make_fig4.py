@@ -1,19 +1,8 @@
-# make_fig4.py
-"""
-Generate Figure 4: B1 vs B2 Subtype Distribution
-Publication-ready output as PDF and PNG (300 dpi)
-"""
-
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
-
 # Colors (Hex)
 COLORS = {
     'B1': '#FFEB99',  # light yellow
@@ -34,10 +23,6 @@ OUTPUT_PNG = os.path.join(OUTPUT_DIR, 'fig4_b_subtype.png')
 # ============================================================================
 
 def detect_format_and_parse(df, has_project=False):
-    """
-    Detect if CSV is LONG or WIDE format and parse accordingly.
-    Returns: dict with keys 'B1' and 'B2' (and optionally 'project')
-    """
     cols = df.columns.tolist()
     
     # Check if WIDE format (has B1 and B2 columns)
@@ -128,11 +113,7 @@ def detect_format_and_parse(df, has_project=False):
             'N': int(total)
         }
 
-# ============================================================================
-# LOAD DATA
-# ============================================================================
-
-print("Loading data...")
+print("Loading data")
 
 # Check if files exist
 required_files = [
@@ -151,36 +132,28 @@ df_project_raw = pd.read_csv('c_b_subtype_by_project.csv')
 overall_data = detect_format_and_parse(df_overall_raw, has_project=False)
 project_data = detect_format_and_parse(df_project_raw, has_project=True)
 
-# ============================================================================
-# QUALITY CHECKS
-# ============================================================================
-
-print("Running quality checks...")
+print("Running quality checks")
 
 # Check 1: Percentages sum to 100
 overall_sum = overall_data['B1'] + overall_data['B2']
 assert 99.8 <= overall_sum <= 100.2, \
     f"Overall: B1+B2 = {overall_sum}%"
-print(f"✓ Overall percentages sum to ~100%")
+print(f"Overall percentages sum to ~100%")
 
 for proj in project_data:
     proj_sum = proj['B1'] + proj['B2']
     assert 99.8 <= proj_sum <= 100.2, \
         f"Project {proj['project']}: B1+B2 = {proj_sum}%"
-print(f"✓ All project percentages sum to ~100%")
+print(f"All project percentages sum to ~100%")
 
 # Check 2: N consistency (if available)
 if overall_data['N'] is not None:
     project_n_sum = sum(p['N'] for p in project_data if p['N'] is not None)
     if project_n_sum > 0:
         if abs(overall_data['N'] - project_n_sum) > 1:
-            print(f"⚠ Warning: Overall N={overall_data['N']} != Sum of project Ns={project_n_sum}")
+            print(f"Warning: Overall N={overall_data['N']} != Sum of project Ns={project_n_sum}")
         else:
-            print(f"✓ N consistency check passed")
-
-# ============================================================================
-# PREPARE DATA
-# ============================================================================
+            print(f"N consistency check passed")
 
 # Enforce project order: CUDA-Q first, then Qiskit Aer
 ordered_projects = []
@@ -209,11 +182,7 @@ if not ordered_projects:
         'B2': p['B2']
     } for p in project_data]
 
-# ============================================================================
-# CREATE FIGURE
-# ============================================================================
-
-print("Creating figure...")
+print("Creating figure")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -224,10 +193,6 @@ gs = fig.add_gridspec(1, 2, left=0.08, right=0.95, wspace=0.5)
 
 ax_a = fig.add_subplot(gs[0, 0])
 ax_b = fig.add_subplot(gs[0, 1])
-
-# ============================================================================
-# PANEL A: Overall
-# ============================================================================
 
 bar_height = 0.6
 
@@ -275,10 +240,6 @@ ax_a.text(-0.15, 1.05, '(A)',
          transform=ax_a.transAxes,
          fontsize=12, weight='bold')
 
-# ============================================================================
-# PANEL B: By Project
-# ============================================================================
-
 n_projects = len(ordered_projects)
 y_pos = np.arange(n_projects)
 
@@ -325,10 +286,6 @@ ax_b.text(-0.15, 1.05, '(B)',
          transform=ax_b.transAxes,
          fontsize=12, weight='bold')
 
-# ============================================================================
-# LEGEND
-# ============================================================================
-
 # Create legend
 legend_elements = [
     Patch(facecolor=COLORS['B1'], edgecolor='black', label='B1 – Config/Metadata Constraints'),
@@ -344,20 +301,16 @@ fig.legend(handles=legend_elements,
           frameon=True,
           edgecolor='black')
 
-# ============================================================================
-# SAVE FIGURE
-# ============================================================================
-
-print("Saving figure...")
+print("Saving figure")
 
 # Save as PDF
 plt.savefig(OUTPUT_PDF, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PDF}")
+print(f"Saved: {OUTPUT_PDF}")
 
 # Save as PNG
 plt.savefig(OUTPUT_PNG, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PNG}")
+print(f"Saved: {OUTPUT_PNG}")
 
 plt.close()
 
-print("\n✓ Figure 4 complete!")
+print("\nFigure 4 complete!")

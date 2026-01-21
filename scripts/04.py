@@ -1,15 +1,4 @@
 
-"""
-04_effect_sizes.py
-Step D (optional): χ² / (optional Fisher for 2x2) + Cramér’s V for key cross-tabs.
-
-Inputs (CSV, relative paths):
-- ./Cuda-Q/cudaq_issues_raw.csv
-- ./qskit/github_issues.csv
-
-Outputs:
-- e_effect_sizes.csv
-"""
 
 from __future__ import annotations
 
@@ -18,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-# --- optional SciPy (for chi2 p-values and Fisher exact) ---
+
 HAS_SCIPY = True
 try:
     from scipy.stats import chi2_contingency, chi2 as chi2_dist, fisher_exact
@@ -29,7 +18,6 @@ except Exception:
 CUDAQ_FILE = Path("./Cuda-Q/cudaq_issues_raw.csv")
 QISKIT_FILE = Path("./qskit/github_issues.csv")
 
-# permutation settings (only used when expected counts are small OR SciPy is missing)
 N_PERM = 5000
 RNG_SEED = 0
 
@@ -53,13 +41,13 @@ def load_and_prepare(path: Path, gpu_filter: bool) -> pd.DataFrame:
     required = ["project", "issueid", "stacklayer", "bugtype", "ctclass"]
     missing = [c for c in required if c not in df.columns]
     if missing:
-        print(f"FEHLER in {path}: Missing required columns: {missing}")
+        print(f"Warn in {path}: Missing required columns: {missing}")
         print(f"Available: {list(df.columns)}")
         sys.exit(1)
 
     if gpu_filter:
         if "gpu_relevant" not in df.columns:
-            print(f"FEHLER in {path}: missing 'gpu_relevant' for GPU filter")
+            print(f"Warn in {path}: missing 'gpu_relevant' for GPU filter")
             sys.exit(1)
         df = df[df["gpu_relevant"].fillna("").astype(str).str.strip().str.upper() == "X"].copy()
 

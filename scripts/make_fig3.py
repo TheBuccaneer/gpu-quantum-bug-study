@@ -1,8 +1,3 @@
-# make_fig3.py
-"""
-Generate Figure 3: CTClass Distribution by Bug Type
-Publication-ready output as PDF and PNG (300 dpi)
-"""
 
 import os
 import pandas as pd
@@ -10,9 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
 
 # Colors (Hex)
 COLORS = {
@@ -34,7 +26,7 @@ OUTPUT_PNG = os.path.join(OUTPUT_DIR, 'fig3_bugtype_x_ctclass.png')
 # LOAD DATA
 # ============================================================================
 
-print("Loading data...")
+print("Loading data")
 
 # Check if files exist
 required_files = [
@@ -54,22 +46,18 @@ df_counts = pd.read_csv('d_bugtype_x_ctclass_overall_counts.csv')
 # QUALITY CHECKS
 # ============================================================================
 
-print("Running quality checks...")
+print("quality checks")
 
 # Check 1: Percentages sum to 100 for each bug type
 for idx, row in df_pct.iterrows():
     total_pct = row['A'] + row['B'] + row['C']
     assert 99.8 <= total_pct <= 100.2, \
         f"BugType {row['bugtype']}: percentages sum to {total_pct}%"
-print(f"✓ All bug type percentages sum to ~100%")
+print(f"All bug type percentages sum to ~100%")
 
 # Check 2: Total count consistency
 total_count = df_counts[['A', 'B', 'C']].sum().sum()
-print(f"✓ Total count across all bug types: {total_count}")
-
-# ============================================================================
-# PREPARE DATA
-# ============================================================================
+print(f" Total count across all bug types: {total_count}")
 
 # Sort by B-dominance (descending) - B-heavy types on top
 df_pct = df_pct.sort_values('B', ascending=False).reset_index(drop=True)
@@ -82,11 +70,8 @@ df_pct['N'] = df_counts[['A', 'B', 'C']].sum(axis=1)
 y_labels = [f"{row['bugtype']} (N={int(row['N'])})" 
             for _, row in df_pct.iterrows()]
 
-# ============================================================================
-# CREATE FIGURE
-# ============================================================================
 
-print("Creating figure...")
+print("Creating figure")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -158,10 +143,6 @@ ax.spines['right'].set_visible(False)
 # Invert y-axis so highest B is on top
 ax.invert_yaxis()
 
-# ============================================================================
-# LEGEND
-# ============================================================================
-
 # Create legend
 legend_elements = [
     Patch(facecolor=COLORS['A'], edgecolor='black', label='A – Compile-Time Avoidable'),
@@ -178,20 +159,16 @@ ax.legend(handles=legend_elements,
          frameon=True,
          edgecolor='black')
 
-# ============================================================================
-# SAVE FIGURE
-# ============================================================================
-
-print("Saving figure...")
+print("Saving figure")
 
 # Save as PDF
 plt.savefig(OUTPUT_PDF, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PDF}")
+print(f"Saved: {OUTPUT_PDF}")
 
 # Save as PNG
 plt.savefig(OUTPUT_PNG, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PNG}")
+print(f"Saved: {OUTPUT_PNG}")
 
 plt.close()
 
-print("\n✓ Figure 3 complete!")
+print("\nFigure 3 complete!")

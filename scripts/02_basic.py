@@ -18,18 +18,13 @@ except ImportError:
 
 
 def normalize_column_name(col):
-    """Normalisiert Spaltennamen: strip, lowercase, spaces->underscore, BOM entfernen."""
     col = col.strip().lower()
-    col = col.replace('\ufeff', '')  # BOM
+    col = col.replace('\ufeff', '')
     col = col.replace(' ', '_')
     return col
 
 
 def find_col(df, candidates):
-    """
-    Findet die erste passende Spalte aus einer Liste von Kandidaten.
-    Gibt den tatsächlichen Spaltennamen zurück oder None.
-    """
     norm_cols = {normalize_column_name(c): c for c in df.columns}
     for candidate in candidates:
         norm_candidate = normalize_column_name(candidate)
@@ -39,15 +34,10 @@ def find_col(df, candidates):
 
 
 def load_and_prepare(filepath, required_cols, optional_cols=None, gpu_filter=False):
-    """
-    Lädt CSV, normalisiert Spalten, entfernt doppelte Header, dedupliziert.
-    """
     df = pd.read_csv(filepath, encoding='utf-8-sig', dtype=str)
     
-    # Spaltennamen normalisieren
     df.columns = [normalize_column_name(c) for c in df.columns]
     
-    # Doppelte Header entfernen (nur für issueid/project prüfen)
     if 'issueid' in df.columns:
         df = df[df['issueid'].str.strip().str.lower() != 'issueid']
     if 'project' in df.columns:
@@ -58,26 +48,23 @@ def load_and_prepare(filepath, required_cols, optional_cols=None, gpu_filter=Fal
     # Required columns prüfen
     missing = [col for col in required_cols if col not in df.columns]
     if missing:
-        print(f"FEHLER in {filepath}: Fehlende Required-Spalten: {missing}")
+        print(f"FEHLER in {filepath}: Missing Columns: {missing}")
         print(f"Verfügbare Spalten: {list(df.columns)}")
         sys.exit(1)
     
-    # GPU-Filter für Qiskit
     if gpu_filter:
         if 'gpu_relevant' not in df.columns:
-            print(f"FEHLER in {filepath}: 'gpu_relevant' Spalte für Filter fehlt")
+            print(f"FEHLER in {filepath}: 'gpu_relevant' column not there")
             sys.exit(1)
         # "X" bedeutet True
         df = df[df['gpu_relevant'].str.strip().str.upper() == 'X'].copy()
     
-    # Nach IssueID deduplizieren (keep="last")
     df = df.drop_duplicates(subset=['issueid'], keep='last')
     
     return df
 
 
 def wilson_ci(count, total, alpha=0.05):
-    """Berechnet Wilson-CI für eine Proportion."""
     if not HAS_STATSMODELS or total == 0:
         return np.nan, np.nan
     ci_low, ci_high = proportion_confint(count, total, alpha=alpha, method='wilson')
@@ -85,9 +72,6 @@ def wilson_ci(count, total, alpha=0.05):
 
 
 def compute_distribution(df, group_col, category_col, output_prefix, by_project=False):
-    """
-    Berechnet Count + Prozent (+ optional Wilson-CI) für eine Kategorie.
-    """
     if by_project:
         grouped = df.groupby(['project', category_col], dropna=False).size().reset_index(name='count')
         totals = df.groupby('project')['uid'].nunique().reset_index(name='total')
@@ -129,7 +113,7 @@ def main():
     cudaq_file = Path("./Cuda-Q/cudaq_issues_raw.csv")
     qiskit_file = Path("./qskit/github_issues.csv")
     
-    # Required columns (normalisiert)
+    # Required columns
     required_base = ['project', 'issueid', 'bugtype', 'stacklayer', 'ctclass']
     
     # CUDA-Q: alle Issues
@@ -149,10 +133,9 @@ def main():
         gpu_filter=True
     )
     
-    # Kombinieren
+    # combine
     df = pd.concat([cudaq_df, qiskit_df], ignore_index=True)
     
-    # UID erstellen (project#issueid) für repo-übergreifendes Zählen
     df['uid'] = df['project'].astype(str).str.strip() + '#' + df['issueid'].astype(str).str.strip()
     
     # Data cleaning
@@ -167,7 +150,6 @@ def main():
         invalid_counts = invalid_ctclass['ctclass'].value_counts()
         print(f"WARNUNG: Ungültige CTClass-Werte gefunden: {invalid_counts.to_dict()}")
     
-    # CTSubType-Spalte finden (flexible Namen)
     ctsubtype_candidates = ['ctsubtype', 'ct_subtype', 'subclass', 'subtype', 'b1/b2']
     ctsubtype_col = find_col(df, ctsubtype_candidates)
     
@@ -214,11 +196,11 @@ def main():
             outputs.append(compute_distribution(df_b, 'project', 'ctsubtype_norm', 'c_b_subtype', by_project=False))
             outputs.append(compute_distribution(df_b, 'project', 'ctsubtype_norm', 'c_b_subtype', by_project=True))
         else:
-            print("WARNUNG: Keine Issues mit CTClass == 'B' gefunden.")
+            print("Warn: no B Issues.")
     else:
-        print("WARNUNG: B-SubType-Analysen übersprungen (Spalte fehlt).")
+        print("WARNUNG: B-SubType-Analysen not done.")
     
-    print("Geschriebene Dateien:")
+    print("Written Files:")
     for output in outputs:
         print(f"  - {output}")
     

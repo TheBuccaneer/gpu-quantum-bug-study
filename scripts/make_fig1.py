@@ -1,8 +1,4 @@
-# make_fig1.py
-"""
-Generate Figure 1: CTClass Distribution (Overall + by Project)
-Publication-ready output as PDF and PNG (300 dpi)
-"""
+
 
 import os
 import pandas as pd
@@ -10,9 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
 
 # Colors (Hex)
 COLORS = {
@@ -30,11 +23,7 @@ OUTPUT_DIR = 'figures'
 OUTPUT_PDF = os.path.join(OUTPUT_DIR, 'fig1_ctclass.pdf')
 OUTPUT_PNG = os.path.join(OUTPUT_DIR, 'fig1_ctclass.png')
 
-# ============================================================================
-# LOAD DATA
-# ============================================================================
-
-print("Loading data...")
+print("Loading data")
 
 # Check if files exist
 required_files = [
@@ -54,31 +43,22 @@ df_overall = pd.read_csv('c_ctclass_overall.csv')
 df_pct = pd.read_csv('d_project_x_ctclass_overall_pct.csv')
 df_counts = pd.read_csv('d_project_x_ctclass_overall_counts.csv')
 
-# ============================================================================
-# QUALITY CHECKS
-# ============================================================================
+print("Quality checks")
 
-print("Running quality checks...")
 
-# Check 1: Total count should be 196
 total_count = df_overall['count'].sum()
 expected_total = df_overall['total'].iloc[0]
 assert abs(total_count - expected_total) <= 1, \
     f"Total count {total_count} != expected {expected_total}"
-print(f"✓ Total count: {total_count}")
+print(f"Total count: {total_count}")
 
-# Check 2: Percentages sum to 100 for each project
 for idx, row in df_pct.iterrows():
     total_pct = row['A'] + row['B'] + row['C']
     assert 99.8 <= total_pct <= 100.2, \
         f"Project {row['project']}: percentages sum to {total_pct}%"
-print(f"✓ All project percentages sum to ~100%")
+print(f"All project percentages sum to ~100%")
 
-# ============================================================================
-# CREATE FIGURE
-# ============================================================================
-
-print("Creating figure...")
+print("Creating figure")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -89,10 +69,6 @@ gs = fig.add_gridspec(1, 2, left=0.08, right=0.95, wspace=0.3)
 
 ax_a = fig.add_subplot(gs[0, 0])
 ax_b = fig.add_subplot(gs[0, 1])
-
-# ============================================================================
-# PANEL A: Overall CTClass Distribution
-# ============================================================================
 
 # Enforce explicit A, B, C order
 df_overall['ctclass'] = pd.Categorical(df_overall['ctclass'], 
@@ -152,10 +128,6 @@ ax_a.text(0.05, 0.95, f'N = {int(total_count)}',
 ax_a.text(-0.15, 1.05, '(A)',
          transform=ax_a.transAxes,
          fontsize=12, weight='bold')
-
-# ============================================================================
-# PANEL B: CTClass by Project (100% Stacked)
-# ============================================================================
 
 # Prepare data
 projects = df_pct['project'].tolist()
@@ -246,9 +218,6 @@ ax_b.text(-0.15, 1.05, '(B)',
          transform=ax_b.transAxes,
          fontsize=12, weight='bold')
 
-# ============================================================================
-# LEGEND
-# ============================================================================
 
 # Create legend (smaller font for less dominance)
 legend_elements = [
@@ -266,20 +235,16 @@ fig.legend(handles=legend_elements,
           frameon=True,
           edgecolor='black')
 
-# ============================================================================
-# SAVE FIGURE
-# ============================================================================
-
-print("Saving figure...")
+print("Saving figure")
 
 # Save as PDF
 plt.savefig(OUTPUT_PDF, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PDF}")
+print(f"Saved: {OUTPUT_PDF}")
 
 # Save as PNG
 plt.savefig(OUTPUT_PNG, dpi=300, bbox_inches='tight')
-print(f"✓ Saved: {OUTPUT_PNG}")
+print(f"Saved: {OUTPUT_PNG}")
 
 plt.close()
 
-print("\n✓ Figure 1 complete!")
+print("\nFigure 1 complete!")

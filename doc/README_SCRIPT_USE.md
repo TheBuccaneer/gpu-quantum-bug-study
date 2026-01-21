@@ -27,7 +27,7 @@ Outputs:
 - table1_dataset_overview.csv
 
 
-## 02.py — Core distributions (Step C)
+## 02_basic.py 
 
 **Purpose:**  
 Compute the core descriptive statistics used in the paper (Step C), based on the manually coded GitHub issue datasets.
@@ -57,10 +57,10 @@ Compute the core descriptive statistics used in the paper (Step C), based on the
 
 **How to run:**
 ```bash
-python 02.py
+python 02_basic.py
 ```
 
-### 03_cross_tabs.py — Cross tabs / story analyses (Step D)
+### 03_cross.py
 
 **Purpose:**  
 Generate the main cross-tabulations used for the paper’s “story” analysis (Step D), i.e., how CTClass varies across stack layers, bug types, and projects.
@@ -100,11 +100,8 @@ Generate the main cross-tabulations used for the paper’s “story” analysis 
 
 **How to run:**
 ```bash
-python 03_cross_tabs.py
+python 03_cross.py
 ```
-
-
-
 
 ### 04.py — Effect sizes for key cross-tabs (Step D, optional)
 
@@ -165,4 +162,93 @@ Generate *Figure 1* as a publication-ready 2-panel plot:
 **How to run:**
 ```bash
 python make_fig1.py
+```
+
+### make_fig2.py — Figure 2 (CTClass distribution by stack layer)
+
+**Purpose:**  
+Generate *Figure 2* as a publication-ready plot showing the **CTClass distribution per stack layer** as **100% stacked horizontal bars** (percentages + per-layer N). Layers are ordered to highlight where **runtime-only (C)** dominates.
+
+**Inputs (CSV):**  
+(Produced by prior analysis steps / cross-tabs)
+- `d_layer_x_ctclass_overall_pct.csv`
+- `d_layer_x_ctclass_overall_counts.csv`
+
+**Processing (high-level):**
+- Validates that A+B+C percentages per layer sum to ~100% (tolerance 99.8–100.2).
+- Computes total N per layer from counts and appends it to y-axis labels (`Layer (N=...)`).
+- Sorts layers by **C share descending** (C-heavy layers on top).
+- Uses fixed CTClass stacking order **A → B → C** and consistent color mapping.
+- Adds in-bar percentage labels only for segments ≥ 10% (C labels in white for contrast).
+- Applies publication formatting (gridlines, spines, legend below plot).
+
+**Outputs:**
+- `figures/fig2_layer_x_ctclass.pdf`
+- `figures/fig2_layer_x_ctclass.png` (300 dpi)
+
+**How to run:**
+```bash
+python make_fig2.py
+```
+
+
+
+### make_fig3.py — Figure 3 (CTClass distribution by bug type)
+
+**Purpose:**  
+Generate *Figure 3* as a publication-ready plot showing the **CTClass distribution per bug type** as **100% stacked horizontal bars** (percentages + per-bugtype N). Bug types are ordered to highlight where **potentially pre-execution preventable (B)** is strongest.
+
+**Inputs (CSV):**  
+(Produced by prior analysis steps / cross-tabs)
+- `d_bugtype_x_ctclass_overall_pct.csv`
+- `d_bugtype_x_ctclass_overall_counts.csv`
+
+**Processing (high-level):**
+- Validates that A+B+C percentages per bug type sum to ~100% (tolerance 99.8–100.2).
+- Computes total N per bug type from counts and appends it to y-axis labels (`BugType (N=...)`).
+- Sorts bug types by **B share descending** (B-heavy types on top).
+- Uses fixed CTClass stacking order **A → B → C** and consistent color mapping.
+- Adds in-bar percentage labels only for segments ≥ 10% (C labels in white for contrast).
+- Applies publication formatting (gridlines, spines, legend below plot).
+
+**Outputs:**
+- `figures/fig3_bugtype_x_ctclass.pdf`
+- `figures/fig3_bugtype_x_ctclass.png` (300 dpi)
+
+**How to run:**
+```bash
+python make_fig3.py
+```
+
+### make_fig4.py — Figure 4 (B1 vs B2 subtype distribution)
+
+**Purpose:**  
+Generate *Figure 4* as a publication-ready **2-panel plot** for **CTClass=B subtypes**:
+- (A) Overall distribution of **B1 vs B2**
+- (B) Distribution of **B1 vs B2 by project** (with per-project N)
+
+This figure separates **metadata/config constraints (B1)** vs **contracts/typestate-like constraints (B2)**.
+
+**Inputs (CSV):**  
+(Produced by prior analysis steps)
+- `c_b_subtype_overall.csv`
+- `c_b_subtype_by_project.csv`
+
+**Processing (high-level):**
+- Robustly supports **WIDE** (columns `B1`, `B2`) and **LONG** formats (detects subtype column names like `ctsubtype_norm`, `b_subtype`, etc.).
+- Auto-detects whether inputs are **counts or percentages**:
+  - If B1+B2 ≈ 100 → treat as percentages
+  - Else treat as counts and convert to percentages; derives N
+- Validates that B1+B2 sums to ~100% overall and per project (tolerance 99.8–100.2).
+- Orders projects with **CUDA-Q first**, then **Qiskit Aer (GPU)** (fallback to original order if names don’t match).
+- Adds in-bar percentage labels only for segments ≥ 10%.
+- Applies publication formatting and panel labels (A)/(B), plus legend below the full figure.
+
+**Outputs:**
+- `figures/fig4_b_subtype.pdf`
+- `figures/fig4_b_subtype.png` (300 dpi)
+
+**How to run:**
+```bash
+python make_fig4.py
 ```
